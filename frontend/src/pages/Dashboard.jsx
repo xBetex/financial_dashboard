@@ -19,22 +19,50 @@ import {
   Switch,
   IconButton,
   Tooltip,
+  Tabs,
+  Tab,
+  Paper,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import DownloadIcon from '@mui/icons-material/Download';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import TrackChangesIcon from '@mui/icons-material/TrackChanges';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 
+import { useThemeMode } from '../App';
 import TransactionList from '../components/TransactionList';
 import TransactionForm from '../components/TransactionForm';
 import AccountIndicator from '../components/AccountIndicator';
 import AccountSummary from '../components/AccountSummary';
 import BalanceChart from '../components/BalanceChart';
 import Filters from '../components/Filters';
+import AdvancedStats from '../components/AdvancedStats';
+import FinancialGoals from '../components/FinancialGoals';
+
+// Tab Panel Component
+function TabPanel({ children, value, index, ...other }) {
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ mt: 3 }}>{children}</Box>}
+    </div>
+  );
+}
 
 const Dashboard = () => {
   const theme = useTheme();
+  const { darkMode, toggleDarkMode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
+  const [currentTab, setCurrentTab] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [selectedAccountIds, setSelectedAccountIds] = useState([]);
@@ -46,7 +74,9 @@ const Dashboard = () => {
     transactionType: '',
     category: '',
     accountId: '',
-    description: ''
+    description: '',
+    minAmount: '',
+    maxAmount: ''
   });
   const [loading, setLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
@@ -74,7 +104,19 @@ const Dashboard = () => {
       if (filters.description) params.append('description', filters.description);
 
       const response = await fetch(`http://localhost:8000/transactions/?${params}`);
-      const data = await response.json();
+      let data = await response.json();
+      
+      // Apply client-side value filters if API doesn't support them yet
+      if (filters.minAmount !== '') {
+        const minAmount = parseFloat(filters.minAmount);
+        data = data.filter(t => t.amount >= minAmount);
+      }
+      
+      if (filters.maxAmount !== '') {
+        const maxAmount = parseFloat(filters.maxAmount);
+        data = data.filter(t => t.amount <= maxAmount);
+      }
+      
       setTransactions(data);
     } catch (error) {
       console.error('Erro ao carregar transações:', error);
@@ -223,15 +265,30 @@ const Dashboard = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  const handleTabChange = (event, newValue) => {
+    setCurrentTab(newValue);
+  };
+
   return (
     <>
       {/* App Bar */}
-      <AppBar position="static" elevation={0}>
+      <AppBar position="static" elevation={0} sx={{ 
+        background: darkMode 
+          ? 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)'
+          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      }}>
         <Toolbar>
           <AccountBalanceIcon sx={{ mr: 2 }} />
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Dashboard Financeiro
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+            💰 Dashboard Financeiro
           </Typography>
+          
+          {/* Dark Mode Toggle */}
+          <Tooltip title={darkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}>
+            <IconButton color="inherit" onClick={toggleDarkMode} sx={{ mr: 1 }}>
+              {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+            </IconButton>
+          </Tooltip>
           
           {/* Export Button */}
           <Tooltip title="Exportar banco de dados completo">
@@ -247,87 +304,138 @@ const Dashboard = () => {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-        <Grid container spacing={3}>
-          {/* Account Indicators */}
-          <Grid item xs={12}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h5" gutterBottom>
-                Saldo das Contas
-              </Typography>
-              <Box display="flex" alignItems="center" gap={2}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={selectionMode}
-                      onChange={handleToggleSelectionMode}
-                    />
-                  }
-                  label="Modo Seleção"
-                />
-                {selectionMode && (
-                  <Button 
-                    variant="outlined" 
-                    size="small"
-                    onClick={handleSelectAll}
-                  >
-                    {selectedAccountIds.length === accounts.length ? 'Desmarcar Todas' : 'Selecionar Todas'}
-                  </Button>
-                )}
-              </Box>
-            </Box>
-            <Grid container spacing={2}>
-              {accounts.map((account) => (
-                <Grid item xs={12} sm={6} md={3} key={account.id}>
-                  <AccountIndicator 
-                    account={account} 
-                    onAccountUpdate={handleAccountUpdate}
-                    isSelected={selectedAccountIds.includes(account.id)}
-                    onToggleSelection={selectionMode ? handleToggleSelection : null}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </Grid>
+      {/* Navigation Tabs */}
+      <Paper elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Container maxWidth="xl">
+          <Tabs 
+            value={currentTab} 
+            onChange={handleTabChange}
+            variant={isMobile ? "scrollable" : "standard"}
+            scrollButtons="auto"
+            sx={{
+              '& .MuiTab-root': {
+                fontWeight: 600,
+                textTransform: 'none',
+                fontSize: '1rem',
+              }
+            }}
+          >
+            <Tab 
+              icon={<DashboardIcon />} 
+              label="Dashboard Principal" 
+              iconPosition="start"
+            />
+            <Tab 
+              icon={<BarChartIcon />} 
+              label="Estatísticas Avançadas" 
+              iconPosition="start"
+            />
+            <Tab 
+              icon={<TrackChangesIcon />} 
+              label="Metas Financeiras" 
+              iconPosition="start"
+            />
+          </Tabs>
+        </Container>
+      </Paper>
 
-          {/* Account Summary */}
-          {(selectionMode || selectedAccountIds.length > 0) && (
+      <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
+        {/* Dashboard Principal */}
+        <TabPanel value={currentTab} index={0}>
+          <Grid container spacing={3}>
+            {/* Account Indicators */}
             <Grid item xs={12}>
-              <AccountSummary 
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h5" gutterBottom fontWeight="bold">
+                  💳 Saldo das Contas
+                </Typography>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={selectionMode}
+                        onChange={handleToggleSelectionMode}
+                      />
+                    }
+                    label="Modo Seleção"
+                  />
+                  {selectionMode && (
+                    <Button 
+                      variant="outlined" 
+                      size="small"
+                      onClick={handleSelectAll}
+                    >
+                      {selectedAccountIds.length === accounts.length ? 'Desmarcar Todas' : 'Selecionar Todas'}
+                    </Button>
+                  )}
+                </Box>
+              </Box>
+              <Grid container spacing={2}>
+                {accounts.map((account) => (
+                  <Grid item xs={12} sm={6} md={3} key={account.id}>
+                    <AccountIndicator 
+                      account={account} 
+                      onAccountUpdate={handleAccountUpdate}
+                      isSelected={selectedAccountIds.includes(account.id)}
+                      onToggleSelection={selectionMode ? handleToggleSelection : null}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
+
+            {/* Account Summary */}
+            {(selectionMode || selectedAccountIds.length > 0) && (
+              <Grid item xs={12}>
+                <AccountSummary 
+                  accounts={accounts}
+                  selectedAccountIds={selectedAccountIds}
+                />
+              </Grid>
+            )}
+
+            {/* Balance Chart */}
+            <Grid item xs={12} lg={8}>
+              <BalanceChart accounts={accounts} />
+            </Grid>
+
+            {/* Filters */}
+            <Grid item xs={12} lg={4}>
+              <Filters 
+                filters={filters} 
+                onFiltersChange={handleFiltersChange}
                 accounts={accounts}
-                selectedAccountIds={selectedAccountIds}
               />
             </Grid>
-          )}
 
-          {/* Balance Chart */}
-          <Grid item xs={12} lg={8}>
-            <BalanceChart accounts={accounts} />
+            {/* Transaction List */}
+            <Grid item xs={12}>
+              <Typography variant="h5" gutterBottom sx={{ mt: 2 }} fontWeight="bold">
+                📋 Transações Recentes
+              </Typography>
+              <TransactionList 
+                transactions={transactions} 
+                accounts={accounts}
+                loading={loading}
+                onTransactionUpdate={handleTransactionUpdate}
+                onTransactionDelete={handleTransactionDelete}
+              />
+            </Grid>
           </Grid>
+        </TabPanel>
 
-          {/* Filters */}
-          <Grid item xs={12} lg={4}>
-            <Filters 
-              filters={filters} 
-              onFiltersChange={handleFiltersChange}
-              accounts={accounts}
-            />
-          </Grid>
+        {/* Estatísticas Avançadas */}
+        <TabPanel value={currentTab} index={1}>
+          <AdvancedStats 
+            accounts={accounts}
+            selectedAccountIds={selectedAccountIds}
+          />
+        </TabPanel>
 
-          {/* Transaction List */}
-          <Grid item xs={12}>
-            <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
-              Transações
-            </Typography>
-            <TransactionList 
-              transactions={transactions} 
-              accounts={accounts}
-              loading={loading}
-              onTransactionUpdate={handleTransactionUpdate}
-              onTransactionDelete={handleTransactionDelete}
-            />
-          </Grid>
-        </Grid>
+        {/* Metas Financeiras */}
+        <TabPanel value={currentTab} index={2}>
+          <FinancialGoals />
+        </TabPanel>
       </Container>
 
       {/* Floating Action Button */}
@@ -338,6 +446,10 @@ const Dashboard = () => {
           position: 'fixed',
           bottom: 16,
           right: 16,
+          '&:hover': {
+            transform: 'scale(1.1)',
+            transition: 'transform 0.2s ease-in-out',
+          }
         }}
         onClick={() => setOpenForm(true)}
       >
@@ -352,8 +464,12 @@ const Dashboard = () => {
         fullWidth
         fullScreen={isMobile}
       >
-        <DialogTitle>
-          Nova Transação
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          fontWeight: 'bold'
+        }}>
+          ➕ Nova Transação
         </DialogTitle>
         <DialogContent>
           <TransactionForm 
@@ -371,7 +487,14 @@ const Dashboard = () => {
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+          sx={{ 
+            borderRadius: 2,
+            fontWeight: 'bold'
+          }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

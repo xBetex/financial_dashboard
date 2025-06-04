@@ -11,11 +11,13 @@ import {
   Box,
   TextField,
   Button,
-  IconButton,
+  InputAdornment,
+  Divider,
 } from '@mui/material';
 import { 
   FilterList as FilterListIcon,
   Clear as ClearIcon,
+  AttachMoney as MoneyIcon,
 } from '@mui/icons-material';
 
 const Filters = ({ filters, onFiltersChange, accounts }) => {
@@ -62,7 +64,9 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
       transactionType: '',
       category: '',
       accountId: '',
-      description: ''
+      description: '',
+      minAmount: '',
+      maxAmount: ''
     });
   };
 
@@ -74,8 +78,8 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
           <Box display="flex" alignItems="center">
             <FilterListIcon sx={{ mr: 1 }} color="primary" />
-            <Typography variant="h6">
-              Filtros
+            <Typography variant="h6" fontWeight="bold">
+              🔍 Filtros de Transações
             </Typography>
           </Box>
           
@@ -86,31 +90,43 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
               startIcon={<ClearIcon />}
               onClick={handleClearFilters}
               color="secondary"
+              sx={{ borderRadius: 2 }}
             >
-              Limpar Filtros
+              Limpar Todos
             </Button>
           )}
         </Box>
 
         <Grid container spacing={2}>
+          {/* Search by Description */}
           <Grid item xs={12}>
             <TextField
               fullWidth
               size="small"
-              label="Pesquisar por descrição"
+              label="🔍 Pesquisar por descrição"
               variant="outlined"
               value={filters.description || ''}
               onChange={handleFilterChange('description')}
               placeholder="Digite para pesquisar..."
+              sx={{ mb: 1 }}
             />
           </Grid>
 
+          <Grid item xs={12}>
+            <Divider sx={{ my: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                Filtros por Período
+              </Typography>
+            </Divider>
+          </Grid>
+
+          {/* Date Filters */}
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth size="small">
-              <InputLabel>Mês</InputLabel>
+              <InputLabel>📅 Mês</InputLabel>
               <Select
                 value={filters.month || ''}
-                label="Mês"
+                label="📅 Mês"
                 onChange={handleFilterChange('month')}
               >
                 <MenuItem value="">Todos os meses</MenuItem>
@@ -125,10 +141,10 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
 
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth size="small">
-              <InputLabel>Ano</InputLabel>
+              <InputLabel>📆 Ano</InputLabel>
               <Select
                 value={filters.year || ''}
-                label="Ano"
+                label="📆 Ano"
                 onChange={handleFilterChange('year')}
               >
                 <MenuItem value="">Todos os anos</MenuItem>
@@ -141,27 +157,36 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
             </FormControl>
           </Grid>
 
+          <Grid item xs={12}>
+            <Divider sx={{ my: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                Filtros por Tipo e Categoria
+              </Typography>
+            </Divider>
+          </Grid>
+
+          {/* Type and Category Filters */}
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth size="small">
-              <InputLabel>Tipo</InputLabel>
+              <InputLabel>💰 Tipo</InputLabel>
               <Select
                 value={filters.transactionType || ''}
-                label="Tipo"
+                label="💰 Tipo"
                 onChange={handleFilterChange('transactionType')}
               >
                 <MenuItem value="">Todos os tipos</MenuItem>
-                <MenuItem value="entrada">Entrada</MenuItem>
-                <MenuItem value="saida">Saída</MenuItem>
+                <MenuItem value="income">💚 Receita</MenuItem>
+                <MenuItem value="expense">💸 Despesa</MenuItem>
               </Select>
             </FormControl>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth size="small">
-              <InputLabel>Categoria</InputLabel>
+              <InputLabel>🏷️ Categoria</InputLabel>
               <Select
                 value={filters.category || ''}
-                label="Categoria"
+                label="🏷️ Categoria"
                 onChange={handleFilterChange('category')}
               >
                 <MenuItem value="">Todas as categorias</MenuItem>
@@ -175,11 +200,71 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
           </Grid>
 
           <Grid item xs={12}>
+            <Divider sx={{ my: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                Filtros por Valor
+              </Typography>
+            </Divider>
+          </Grid>
+
+          {/* Value Filters */}
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Valor Mínimo"
+              type="number"
+              variant="outlined"
+              value={filters.minAmount || ''}
+              onChange={handleFilterChange('minAmount')}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MoneyIcon fontSize="small" />
+                    R$
+                  </InputAdornment>
+                ),
+              }}
+              placeholder="0,00"
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Valor Máximo"
+              type="number"
+              variant="outlined"
+              value={filters.maxAmount || ''}
+              onChange={handleFilterChange('maxAmount')}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MoneyIcon fontSize="small" />
+                    R$
+                  </InputAdornment>
+                ),
+              }}
+              placeholder="999999,99"
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <Divider sx={{ my: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                Filtro por Conta
+              </Typography>
+            </Divider>
+          </Grid>
+
+          {/* Account Filter */}
+          <Grid item xs={12}>
             <FormControl fullWidth size="small">
-              <InputLabel>Conta</InputLabel>
+              <InputLabel>🏦 Conta</InputLabel>
               <Select
                 value={filters.accountId || ''}
-                label="Conta"
+                label="🏦 Conta"
                 onChange={handleFilterChange('accountId')}
               >
                 <MenuItem value="">Todas as contas</MenuItem>
@@ -193,10 +278,30 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
           </Grid>
         </Grid>
 
-        <Box mt={2}>
-          <Typography variant="caption" color="text.secondary">
-            Use os filtros acima para refinar a visualização das transações
+        {/* Help Text */}
+        <Box mt={3} p={2} sx={{ 
+          backgroundColor: 'action.hover', 
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'divider'
+        }}>
+          <Typography variant="caption" color="text.secondary" display="block">
+            <strong>💡 Dica:</strong> Use os filtros acima para refinar a visualização das transações
           </Typography>
+          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+            • Combine múltiplos filtros para uma busca mais específica
+          </Typography>
+          <Typography variant="caption" color="text.secondary" display="block">
+            • Os filtros por valor funcionam com valores em reais (ex: 100.50)
+          </Typography>
+          
+          {hasActiveFilters && (
+            <Box mt={1}>
+              <Typography variant="caption" color="primary.main" fontWeight="bold">
+                ✅ {Object.values(filters).filter(v => v !== '' && v !== null && v !== undefined).length} filtro(s) ativo(s)
+              </Typography>
+            </Box>
+          )}
         </Box>
       </CardContent>
     </Card>

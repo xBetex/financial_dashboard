@@ -79,12 +79,13 @@ def create_sample_transactions():
     expense_categories = [
         "Alimentação", "Transporte", "Moradia", "Saúde", "Educação",
         "Entretenimento", "Vestuário", "Supermercado", "Restaurantes",
-        "Combustível", "Farmácia", "Academia", "Cinema", "Shopping"
+        "Combustível", "Farmácia", "Academia", "Cinema", "Shopping",
+        "Contas Obrigatórias"
     ]
     
     # Categories for income
     income_categories = [
-        "Salário", "Freelance", "Investimentos", "Bônus", "Dividendos"
+        "Salário", "Emprestimo", "Transferencia bancária", "Investimentos", "Bônus", "Dividendos"
     ]
     
     # Sample transaction descriptions
@@ -102,12 +103,14 @@ def create_sample_transactions():
         "Farmácia": ["Medicamentos", "Vitaminas", "Produtos de higiene"],
         "Academia": ["Mensalidade", "Personal trainer", "Suplementos"],
         "Cinema": ["Ingresso", "Pipoca", "Filme 3D"],
-        "Shopping": ["Compras variadas", "Presentes", "Eletônicos"]
+        "Shopping": ["Compras variadas", "Presentes", "Eletônicos"],
+        "Contas Obrigatórias": ["Aluguel", "Financiamento", "Cartão de crédito", "Empréstimo"]
     }
     
     income_descriptions = {
         "Salário": ["Salário mensal", "Adiantamento", "13º salário"],
-        "Freelance": ["Projeto web", "Consultoria", "Trabalho extra"],
+        "Emprestimo": ["Empréstimo bancário", "Empréstimo pessoal", "Financiamento"],
+        "Transferencia bancária": ["Transferência recebida", "PIX recebido", "TED recebida"],
         "Investimentos": ["Rendimento CDB", "Dividendos", "Juros poupança"],
         "Bônus": ["Bônus performance", "Participação nos lucros"],
         "Dividendos": ["Ações", "Fundos imobiliários"]
@@ -151,8 +154,10 @@ def create_sample_transactions():
                 
                 if category == "Salário":
                     amount = round(random.uniform(3000, 8000), 2)
-                elif category == "Freelance":
+                elif category == "Emprestimo":
                     amount = round(random.uniform(500, 2000), 2)
+                elif category == "Transferencia bancária":
+                    amount = round(random.uniform(100, 1000), 2)
                 else:
                     amount = round(random.uniform(100, 1000), 2)
             

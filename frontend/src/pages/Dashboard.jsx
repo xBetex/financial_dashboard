@@ -41,6 +41,7 @@ import BalanceChart from '../components/BalanceChart';
 import Filters from '../components/Filters';
 import AdvancedStats from '../components/AdvancedStats';
 import FinancialGoals from '../components/FinancialGoals';
+import MonthlyExpensesSummary from '../components/MonthlyExpensesSummary';
 
 // Tab Panel Component
 function TabPanel({ children, value, index, ...other }) {
@@ -393,6 +394,14 @@ const Dashboard = () => {
                 />
               </Grid>
             )}
+
+            {/* Monthly Expenses Summary */}
+            <Grid item xs={12}>
+              <MonthlyExpensesSummary 
+                selectedAccountIds={selectedAccountIds}
+                accounts={accounts}
+              />
+            </Grid>
 
             {/* Balance Chart */}
             <Grid item xs={12} lg={8}>

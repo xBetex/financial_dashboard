@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -13,14 +13,23 @@ import {
   Button,
   InputAdornment,
   Divider,
+  IconButton,
 } from '@mui/material';
 import { 
   FilterList as FilterListIcon,
   Clear as ClearIcon,
   AttachMoney as MoneyIcon,
+  Search as SearchIcon,
 } from '@mui/icons-material';
 
 const Filters = ({ filters, onFiltersChange, accounts }) => {
+  const [searchText, setSearchText] = useState(filters.description || '');
+  
+  // Sincronizar searchText quando filters.description mudar externamente
+  useEffect(() => {
+    setSearchText(filters.description || '');
+  }, [filters.description]);
+  
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
   
@@ -48,7 +57,9 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
     'Entretenimento',
     'Vestuário',
     'Salário',
-    'Freelance',
+    'Emprestimo',
+    'Transferencia bancária',
+    'Contas Obrigatórias',
     'Investimentos',
     'Outros'
   ];
@@ -57,7 +68,18 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
     onFiltersChange({ [field]: event.target.value });
   };
 
+  const handleSearchFilter = () => {
+    onFiltersChange({ description: searchText });
+  };
+
+  const handleSearchKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      handleSearchFilter();
+    }
+  };
+
   const handleClearFilters = () => {
+    setSearchText('');
     onFiltersChange({
       month: '',
       year: '',
@@ -100,16 +122,47 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
         <Grid container spacing={2}>
           {/* Search by Description */}
           <Grid item xs={12}>
-            <TextField
-              fullWidth
-              size="small"
-              label="🔍 Pesquisar por descrição"
-              variant="outlined"
-              value={filters.description || ''}
-              onChange={handleFilterChange('description')}
-              placeholder="Digite para pesquisar..."
-              sx={{ mb: 1 }}
-            />
+            <Box display="flex" gap={1} alignItems="center">
+              <TextField
+                fullWidth
+                size="small"
+                label="🔍 Pesquisar por descrição"
+                variant="outlined"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="Digite para pesquisar..."
+                onKeyDown={handleSearchKeyPress}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={handleSearchFilter}
+                        edge="end"
+                        color="primary"
+                        size="small"
+                      >
+                        <SearchIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                helperText={
+                  searchText !== (filters.description || '') 
+                    ? "Pressione Enter ou clique em Filtrar para aplicar" 
+                    : ""
+                }
+              />
+              <Button
+                variant="contained"
+                onClick={handleSearchFilter}
+                startIcon={<SearchIcon />}
+                size="small"
+                sx={{ minWidth: 'auto', px: 2 }}
+                disabled={searchText === (filters.description || '')}
+              >
+                Filtrar
+              </Button>
+            </Box>
           </Grid>
 
           <Grid item xs={12}>
@@ -260,10 +313,18 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
 
           {/* Account Filter */}
           <Grid item xs={12}>
-            <FormControl fullWidth size="small">
+            <FormControl 
+              fullWidth 
+              size="small"
+              key={`account-filter-${accounts.map(acc => `${acc.id}-${acc.name}`).join(',')}`}
+            >
               <InputLabel>🏦 Conta</InputLabel>
               <Select
-                value={filters.accountId || ''}
+                value={
+                  filters.accountId && accounts.find(acc => acc.id.toString() === filters.accountId.toString())
+                    ? filters.accountId 
+                    : ''
+                }
                 label="🏦 Conta"
                 onChange={handleFilterChange('accountId')}
               >
@@ -273,6 +334,11 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
                     {account.name}
                   </MenuItem>
                 ))}
+                {filters.accountId && !accounts.find(acc => acc.id.toString() === filters.accountId.toString()) && (
+                  <MenuItem value={filters.accountId} disabled>
+                    Conta não encontrada (ID: {filters.accountId})
+                  </MenuItem>
+                )}
               </Select>
             </FormControl>
           </Grid>

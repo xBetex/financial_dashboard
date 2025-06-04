@@ -55,7 +55,9 @@ const TransactionList = ({ transactions, accounts, loading, onTransactionUpdate,
     'Entretenimento',
     'Vestuário',
     'Salário',
-    'Freelance',
+    'Emprestimo',
+    'Transferencia bancária',
+    'Contas Obrigatórias',
     'Investimentos',
     'Outros'
   ];

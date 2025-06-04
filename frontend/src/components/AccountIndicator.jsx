@@ -161,34 +161,8 @@ const AccountIndicator = ({ account, onAccountUpdate, isSelected = false, onTogg
         </Typography>
 
         {/* Status and additional info */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
           {getStatusChip(account.balance)}
-          <Typography variant="caption" color="text.secondary">
-            ID: {account.id}
-          </Typography>
-        </Box>
-
-        {/* Balance breakdown info */}
-        <Box sx={{ backgroundColor: 'grey.50', borderRadius: 1, p: 1.5 }}>
-          <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-            Informações da Conta:
-          </Typography>
-          <Box display="flex" justifyContent="space-between" mb={0.5}>
-            <Typography variant="caption" color="text.secondary">
-              Saldo Atual:
-            </Typography>
-            <Typography variant="caption" fontWeight="medium">
-              {formatCurrency(account.balance)}
-            </Typography>
-          </Box>
-          <Box display="flex" justifyContent="space-between">
-            <Typography variant="caption" color="text.secondary">
-              Status:
-            </Typography>
-            <Typography variant="caption" fontWeight="medium">
-              {account.balance > 0 ? 'Positivo' : account.balance < 0 ? 'Negativo' : 'Zerado'}
-            </Typography>
-          </Box>
         </Box>
       </CardContent>
 

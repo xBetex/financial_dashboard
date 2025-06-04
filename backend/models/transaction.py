@@ -7,7 +7,7 @@ class Transaction(Base):
     __tablename__ = "transactions"
     
     id = Column(Integer, primary_key=True, index=True)
-    date = Column(DateTime, default=datetime.utcnow)
+    date = Column(DateTime(timezone=False), default=datetime.now)
     description = Column(String, index=True)
     transaction_type = Column(String)  # "entrada" ou "saida"
     category = Column(String)

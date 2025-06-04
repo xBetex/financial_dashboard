@@ -12,6 +12,7 @@ import {
   TextField,
   Button,
   IconButton,
+  InputAdornment,
 } from '@mui/material';
 import { 
   FilterList as FilterListIcon,
@@ -62,7 +63,9 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
       transactionType: '',
       category: '',
       accountId: '',
-      description: ''
+      description: '',
+      minAmount: '',
+      maxAmount: ''
     });
   };
 
@@ -102,6 +105,36 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
               value={filters.description || ''}
               onChange={handleFilterChange('description')}
               placeholder="Digite para pesquisar..."
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Valor Mínimo"
+              type="number"
+              value={filters.minAmount || ''}
+              onChange={handleFilterChange('minAmount')}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                inputProps: { min: 0, step: "0.01" }
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Valor Máximo"
+              type="number"
+              value={filters.maxAmount || ''}
+              onChange={handleFilterChange('maxAmount')}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                inputProps: { min: 0, step: "0.01" }
+              }}
             />
           </Grid>
 

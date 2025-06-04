@@ -41,6 +41,8 @@ async def get_transactions(
     transaction_type: Optional[str] = Query(None, description="Filter by type (entrada/saida)"),
     category: Optional[str] = Query(None, description="Filter by category"),
     account_id: Optional[int] = Query(None, description="Filter by account"),
+    min_amount: Optional[float] = Query(None, description="Minimum amount value"),
+    max_amount: Optional[float] = Query(None, description="Maximum amount value"),
     db: Session = Depends(get_db)
 ):
     """Get transactions with optional filters"""
@@ -56,6 +58,10 @@ async def get_transactions(
         query = query.filter(Transaction.category == category)
     if account_id:
         query = query.filter(Transaction.account_id == account_id)
+    if min_amount is not None:
+        query = query.filter(Transaction.amount >= min_amount)
+    if max_amount is not None:
+        query = query.filter(Transaction.amount <= max_amount)
     
     transactions = query.order_by(Transaction.date.desc()).offset(skip).limit(limit).all()
     return transactions

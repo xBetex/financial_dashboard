@@ -447,4 +447,4 @@ const TransactionList = ({ transactions, accounts, loading, onTransactionUpdate,
   );
 };
 
-export default TransactionList;
+export default TransactionList; 

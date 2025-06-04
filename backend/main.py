@@ -1,10 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from database import create_tables, engine
+from fastapi.responses import JSONResponse
+from database import create_tables, engine, get_db
 from models.account import Account
 from models.transaction import Transaction
 from routers import transactions, accounts
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
+import json
+from datetime import datetime
 
 # Create FastAPI app
 app = FastAPI(
@@ -73,6 +76,59 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "financial-dashboard-api"}
+
+@app.get("/export")
+async def export_database(db: Session = Depends(get_db)):
+    """Export complete database in JSON format"""
+    try:
+        # Get all accounts
+        accounts = db.query(Account).all()
+        accounts_data = []
+        for account in accounts:
+            accounts_data.append({
+                "id": account.id,
+                "name": account.name,
+                "balance": account.balance
+            })
+        
+        # Get all transactions
+        transactions = db.query(Transaction).all()
+        transactions_data = []
+        for transaction in transactions:
+            transactions_data.append({
+                "id": transaction.id,
+                "amount": transaction.amount,
+                "description": transaction.description,
+                "transaction_type": transaction.transaction_type,
+                "category": transaction.category,
+                "date": transaction.date.isoformat() if transaction.date else None,
+                "account_id": transaction.account_id
+            })
+        
+        # Create export data
+        export_data = {
+            "export_info": {
+                "exported_at": datetime.now().isoformat(),
+                "version": "1.0.0",
+                "total_accounts": len(accounts_data),
+                "total_transactions": len(transactions_data)
+            },
+            "accounts": accounts_data,
+            "transactions": transactions_data
+        }
+        
+        return JSONResponse(
+            content=export_data,
+            headers={
+                "Content-Disposition": f"attachment; filename=financial_dashboard_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            }
+        )
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Erro ao exportar dados: {str(e)}"}
+        )
 
 if __name__ == "__main__":
     import uvicorn

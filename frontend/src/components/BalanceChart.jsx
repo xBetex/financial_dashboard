@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -13,6 +13,8 @@ import {
   OutlinedInput,
   Checkbox,
   ListItemText,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import { LineChart } from '@mui/x-charts/LineChart';
 
@@ -27,8 +29,18 @@ const MenuProps = {
   },
 };
 
+const PERIOD_OPTIONS = [
+  { value: 7, label: '7 dias' },
+  { value: 30, label: '30 dias' },
+  { value: 60, label: '60 dias' },
+  { value: 90, label: '90 dias' },
+  { value: 120, label: '120 dias' },
+  { value: 365, label: '1 ano' },
+];
+
 const BalanceChart = ({ accounts }) => {
   const [selectedAccounts, setSelectedAccounts] = useState([]);
+  const [selectedPeriod, setSelectedPeriod] = useState(30);
   const [balanceHistory, setBalanceHistory] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -38,20 +50,14 @@ const BalanceChart = ({ accounts }) => {
     }
   }, [accounts, selectedAccounts]);
 
-  useEffect(() => {
-    if (selectedAccounts.length > 0) {
-      loadBalanceHistory();
-    }
-  }, [selectedAccounts]);
-
-  const loadBalanceHistory = async () => {
+  const loadBalanceHistory = useCallback(async () => {
     if (selectedAccounts.length === 0) return;
     
     setLoading(true);
     try {
       const historyPromises = selectedAccounts.map(async (accountId) => {
         const response = await fetch(
-          `http://localhost:8000/accounts/${accountId}/balance-history?days=30`
+          `http://localhost:8000/accounts/${accountId}/balance-history?days=${selectedPeriod}`
         );
         const data = await response.json();
         return { accountId, data };
@@ -71,14 +77,13 @@ const BalanceChart = ({ accounts }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedAccounts, selectedPeriod]);
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
+  useEffect(() => {
+    if (selectedAccounts.length > 0) {
+      loadBalanceHistory();
+    }
+  }, [selectedAccounts, selectedPeriod, loadBalanceHistory]);
 
   const getAccountName = (accountId) => {
     const account = accounts.find(acc => acc.id === parseInt(accountId));
@@ -88,6 +93,12 @@ const BalanceChart = ({ accounts }) => {
   const handleAccountChange = (event) => {
     const value = event.target.value;
     setSelectedAccounts(typeof value === 'string' ? value.split(',') : value);
+  };
+
+  const handlePeriodChange = (event, newPeriod) => {
+    if (newPeriod !== null) {
+      setSelectedPeriod(newPeriod);
+    }
   };
 
   const getChartColors = (index) => {
@@ -107,9 +118,16 @@ const BalanceChart = ({ accounts }) => {
     });
     
     const sortedDates = Array.from(allDates).sort();
-    const xAxisLabels = sortedDates.map(date => 
-      new Date(date + 'T00:00:00').toLocaleDateString('pt-BR')
-    );
+    const xAxisLabels = sortedDates.map(date => {
+      const dateObj = new Date(date + 'T00:00:00');
+      if (selectedPeriod <= 30) {
+        return dateObj.toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' });
+      } else if (selectedPeriod <= 120) {
+        return dateObj.toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' });
+      } else {
+        return dateObj.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      }
+    });
 
     // Create series for each selected account
     const series = selectedAccounts.map((accountId, index) => {
@@ -135,6 +153,11 @@ const BalanceChart = ({ accounts }) => {
     };
   };
 
+  const getCurrentPeriodLabel = () => {
+    const option = PERIOD_OPTIONS.find(opt => opt.value === selectedPeriod);
+    return option ? option.label : '30 dias';
+  };
+
   const chartData = prepareChartData();
 
   return (
@@ -142,7 +165,7 @@ const BalanceChart = ({ accounts }) => {
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h6">
-            Evolução do Saldo - Últimos 30 dias
+            Evolução do Saldo - Últimos {getCurrentPeriodLabel()}
           </Typography>
           
           <FormControl size="small" sx={{ minWidth: 300 }}>
@@ -177,6 +200,23 @@ const BalanceChart = ({ accounts }) => {
           </FormControl>
         </Box>
 
+        {/* Period Selection */}
+        <Box display="flex" justifyContent="center" mb={3}>
+          <ToggleButtonGroup
+            value={selectedPeriod}
+            exclusive
+            onChange={handlePeriodChange}
+            aria-label="período de visualização"
+            size="small"
+          >
+            {PERIOD_OPTIONS.map((option) => (
+              <ToggleButton key={option.value} value={option.value} aria-label={option.label}>
+                {option.label}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </Box>
+
         {loading ? (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
             <CircularProgress />
@@ -207,7 +247,7 @@ const BalanceChart = ({ accounts }) => {
 
         <Box mt={2}>
           <Typography variant="caption" color="text.secondary">
-            * Gráfico mostra a evolução do saldo baseada nas transações dos últimos 30 dias. 
+            * Gráfico mostra a evolução do saldo baseada nas transações dos últimos {getCurrentPeriodLabel()}. 
             Selecione múltiplas contas para comparar.
           </Typography>
         </Box>

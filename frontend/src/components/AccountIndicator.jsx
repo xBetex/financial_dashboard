@@ -4,7 +4,6 @@ import {
   CardContent,
   Typography,
   Box,
-  LinearProgress,
   IconButton,
   Dialog,
   DialogTitle,
@@ -12,6 +11,9 @@ import {
   DialogActions,
   Button,
   TextField,
+  Checkbox,
+  FormControlLabel,
+  Chip,
 } from '@mui/material';
 import {
   AccountBalance as AccountBalanceIcon,
@@ -20,7 +22,7 @@ import {
   Edit as EditIcon,
 } from '@mui/icons-material';
 
-const AccountIndicator = ({ account, onAccountUpdate }) => {
+const AccountIndicator = ({ account, onAccountUpdate, isSelected = false, onToggleSelection }) => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newName, setNewName] = useState(account.name);
   const [loading, setLoading] = useState(false);
@@ -88,11 +90,13 @@ const AccountIndicator = ({ account, onAccountUpdate }) => {
     return <AccountBalanceIcon color="action" />;
   };
 
-  const getProgressValue = (balance) => {
-    // Normalize balance to a 0-100 scale for visual purposes
-    const maxValue = 5000; // Arbitrary max for visualization
-    const normalizedValue = Math.max(0, Math.min(100, (balance / maxValue) * 100));
-    return normalizedValue;
+  const getStatusChip = (balance) => {
+    if (balance > 0) {
+      return <Chip label="Positivo" color="success" size="small" />;
+    } else if (balance < 0) {
+      return <Chip label="Negativo" color="error" size="small" />;
+    }
+    return <Chip label="Zerado" color="default" size="small" />;
   };
 
   return (
@@ -100,6 +104,8 @@ const AccountIndicator = ({ account, onAccountUpdate }) => {
       sx={{ 
         height: '100%',
         transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+        border: isSelected ? '2px solid' : '1px solid',
+        borderColor: isSelected ? 'primary.main' : 'divider',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
@@ -107,11 +113,31 @@ const AccountIndicator = ({ account, onAccountUpdate }) => {
       }}
     >
       <CardContent>
+        {/* Header with selection checkbox */}
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
           <Box display="flex" alignItems="center">
-            <Typography variant="h6" component="div" color="text.secondary">
-              {account.name}
-            </Typography>
+            {onToggleSelection && (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={isSelected}
+                    onChange={(e) => onToggleSelection(account.id, e.target.checked)}
+                    size="small"
+                  />
+                }
+                label={
+                  <Typography variant="h6" component="div" color="text.secondary">
+                    {account.name}
+                  </Typography>
+                }
+                sx={{ margin: 0 }}
+              />
+            )}
+            {!onToggleSelection && (
+              <Typography variant="h6" component="div" color="text.secondary">
+                {account.name}
+              </Typography>
+            )}
             <IconButton 
               size="small" 
               onClick={handleEditClick}
@@ -123,6 +149,7 @@ const AccountIndicator = ({ account, onAccountUpdate }) => {
           {getBalanceIcon(account.balance)}
         </Box>
         
+        {/* Main balance */}
         <Typography
           variant="h4"
           component="div"
@@ -133,32 +160,35 @@ const AccountIndicator = ({ account, onAccountUpdate }) => {
           {formatCurrency(account.balance)}
         </Typography>
 
-        <Box>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+        {/* Status and additional info */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          {getStatusChip(account.balance)}
+          <Typography variant="caption" color="text.secondary">
+            ID: {account.id}
+          </Typography>
+        </Box>
+
+        {/* Balance breakdown info */}
+        <Box sx={{ backgroundColor: 'grey.50', borderRadius: 1, p: 1.5 }}>
+          <Typography variant="caption" color="text.secondary" display="block" mb={1}>
+            Informações da Conta:
+          </Typography>
+          <Box display="flex" justifyContent="space-between" mb={0.5}>
             <Typography variant="caption" color="text.secondary">
-              Status da Conta
+              Saldo Atual:
             </Typography>
+            <Typography variant="caption" fontWeight="medium">
+              {formatCurrency(account.balance)}
+            </Typography>
+          </Box>
+          <Box display="flex" justifyContent="space-between">
             <Typography variant="caption" color="text.secondary">
+              Status:
+            </Typography>
+            <Typography variant="caption" fontWeight="medium">
               {account.balance > 0 ? 'Positivo' : account.balance < 0 ? 'Negativo' : 'Zerado'}
             </Typography>
           </Box>
-          
-          <LinearProgress
-            variant="determinate"
-            value={getProgressValue(account.balance)}
-            color={account.balance > 1000 ? 'success' : account.balance > 0 ? 'warning' : 'error'}
-            sx={{
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: 'grey.200',
-            }}
-          />
-        </Box>
-
-        <Box mt={2}>
-          <Typography variant="caption" color="text.secondary" display="block">
-            ID da Conta: {account.id}
-          </Typography>
         </Box>
       </CardContent>
 

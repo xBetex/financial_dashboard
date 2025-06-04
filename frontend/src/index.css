@@ -5,7 +5,6 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;
 }
 
 code {
@@ -13,12 +12,11 @@ code {
     monospace;
 }
 
-* {
-  box-sizing: border-box;
-}
-
 .app-container {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  background-color: #f5f5f5;
+}
+
+* {
+  box-sizing: border-box;
 } 

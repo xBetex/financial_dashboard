@@ -287,6 +287,139 @@ Para dúvidas ou problemas:
 2. Consulte a documentação da API em `/docs`
 3. Abra uma issue no repositório
 
+## ✨ Demo Online
+
+🔗 **[Ver Demo ao Vivo](https://seu-usuario.github.io/financial-dashboard)** *(em breve)*
+
+## 🎯 Funcionalidades
+
+✅ **Gestão de Contas**: Múltiplas contas com saldos em tempo real  
+✅ **Transações**: Criação, edição e exclusão de transações  
+✅ **Categorização**: Organização por categorias personalizáveis  
+✅ **Filtros Avançados**: Por período, tipo, categoria e descrição  
+✅ **Gráficos Interativos**: Evolução do saldo com períodos configuráveis (7, 30, 60, 90, 120, 365 dias)  
+✅ **Seleção de Contas**: Sistema de seleção múltipla com resumos  
+✅ **Resumo Financeiro**: Saldos positivos/negativos consolidados  
+✅ **Exportação**: Download completo dos dados em JSON  
+✅ **Interface Responsiva**: Funciona perfeitamente em mobile e desktop  
+
+## 🚀 Tecnologias Utilizadas
+
+### Frontend
+- **React 18** com Hooks
+- **Material-UI (MUI)** para interface
+- **MUI X Charts** para gráficos
+- **Date-fns** para manipulação de datas
+
+### Backend  
+- **FastAPI** com Python
+- **SQLAlchemy** ORM
+- **SQLite** banco de dados
+- **Uvicorn** servidor ASGI
+
+## 📦 Instalação e Uso
+
+### Pré-requisitos
+- Python 3.8+
+- Node.js 16+
+- npm ou yarn
+
+### 🔧 Setup Rápido
+
+```bash
+# Clone o repositório
+git clone https://github.com/SEU_USUARIO/financial-dashboard.git
+cd financial-dashboard
+
+# Execute o script de inicialização
+chmod +x start.sh
+./start.sh
+```
+
+O script irá:
+1. Instalar dependências do backend e frontend
+2. Inicializar o banco de dados
+3. Executar backend (porta 8000) e frontend (porta 3000)
+
+### 🔧 Setup Manual
+
+#### Backend
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+#### Frontend
+```bash
+cd frontend
+npm install
+npm run dev  # ou npm start
+```
+
+## 📊 Dataset de Teste
+
+Para testar todas as funcionalidades com dados realistas:
+
+```bash
+# Gerar dados de teste (6 meses de transações)
+python generate_test_data.py
+
+# Ver estatísticas detalhadas
+python show_test_data_stats.py
+```
+
+## 🌐 API Endpoints
+
+### Contas
+- `GET /accounts/` - Listar todas as contas
+- `POST /accounts/` - Criar nova conta
+- `PUT /accounts/{id}` - Atualizar conta
+- `PATCH /accounts/{id}/name` - Atualizar nome da conta
+- `GET /accounts/{id}/balance-history` - Histórico de saldo
+
+### Transações
+- `GET /transactions/` - Listar transações (com filtros)
+- `POST /transactions/` - Criar transação
+- `PUT /transactions/{id}` - Atualizar transação
+- `DELETE /transactions/{id}` - Excluir transação
+
+### Exportação
+- `GET /export` - Exportar todos os dados em JSON
+
+## 🎨 Screenshots
+
+### Dashboard Principal
+![Dashboard](docs/dashboard.png)
+
+### Gráficos Interativos
+![Charts](docs/charts.png)
+
+### Mobile Responsivo
+![Mobile](docs/mobile.png)
+
+## 🤝 Contribuição
+
+Contribuições são bem-vindas! Para contribuir:
+
+1. Faça um Fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📝 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+## 📞 Contato
+
+Seu Nome - [@seu_twitter](https://twitter.com/seu_twitter) - seu.email@gmail.com
+
+Link do Projeto: [https://github.com/SEU_USUARIO/financial-dashboard](https://github.com/SEU_USUARIO/financial-dashboard)
+
 ---
 
-**Desenvolvido com ❤️ para gerenciamento financeiro pessoal** "# finance" 
+⭐ **Se este projeto te ajudou, dê uma estrela!** ⭐ 

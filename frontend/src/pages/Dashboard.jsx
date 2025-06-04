@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Grid,
@@ -14,13 +14,20 @@ import {
   useTheme,
   Snackbar,
   Alert,
+  Button,
+  FormControlLabel,
+  Switch,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import DownloadIcon from '@mui/icons-material/Download';
 
 import TransactionList from '../components/TransactionList';
 import TransactionForm from '../components/TransactionForm';
 import AccountIndicator from '../components/AccountIndicator';
+import AccountSummary from '../components/AccountSummary';
 import BalanceChart from '../components/BalanceChart';
 import Filters from '../components/Filters';
 
@@ -30,6 +37,8 @@ const Dashboard = () => {
   
   const [transactions, setTransactions] = useState([]);
   const [accounts, setAccounts] = useState([]);
+  const [selectedAccountIds, setSelectedAccountIds] = useState([]);
+  const [selectionMode, setSelectionMode] = useState(false);
   const [openForm, setOpenForm] = useState(false);
   const [filters, setFilters] = useState({
     month: '',
@@ -40,15 +49,10 @@ const Dashboard = () => {
     description: ''
   });
   const [loading, setLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  // Load initial data
-  useEffect(() => {
-    loadAccounts();
-    loadTransactions();
-  }, [filters]);
-
-  const loadAccounts = async () => {
+  const loadAccounts = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:8000/accounts/');
       const data = await response.json();
@@ -56,9 +60,9 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Erro ao carregar contas:', error);
     }
-  };
+  }, []);
 
-  const loadTransactions = async () => {
+  const loadTransactions = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -77,6 +81,52 @@ const Dashboard = () => {
       showSnackbar('Erro ao carregar transações', 'error');
     } finally {
       setLoading(false);
+    }
+  }, [filters]);
+
+  // Load initial data
+  useEffect(() => {
+    loadAccounts();
+    loadTransactions();
+  }, [loadAccounts, loadTransactions]);
+
+  const handleExportDatabase = async () => {
+    setExportLoading(true);
+    try {
+      const response = await fetch('http://localhost:8000/export');
+      
+      if (!response.ok) {
+        throw new Error('Erro ao exportar dados');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      
+      // Get filename from Content-Disposition header or use default
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'financial_dashboard_export.json';
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="(.+)"/);
+        if (match) {
+          filename = match[1];
+        }
+      }
+      
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      showSnackbar('Dados exportados com sucesso!', 'success');
+    } catch (error) {
+      console.error('Erro ao exportar dados:', error);
+      showSnackbar('Erro ao exportar dados', 'error');
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -142,6 +192,29 @@ const Dashboard = () => {
     setFilters({ ...filters, ...newFilters });
   };
 
+  const handleToggleSelection = (accountId, isSelected) => {
+    if (isSelected) {
+      setSelectedAccountIds([...selectedAccountIds, accountId]);
+    } else {
+      setSelectedAccountIds(selectedAccountIds.filter(id => id !== accountId));
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedAccountIds.length === accounts.length) {
+      setSelectedAccountIds([]);
+    } else {
+      setSelectedAccountIds(accounts.map(account => account.id));
+    }
+  };
+
+  const handleToggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    if (!selectionMode) {
+      setSelectedAccountIds([]);
+    }
+  };
+
   const showSnackbar = (message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
   };
@@ -159,6 +232,18 @@ const Dashboard = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Dashboard Financeiro
           </Typography>
+          
+          {/* Export Button */}
+          <Tooltip title="Exportar banco de dados completo">
+            <IconButton
+              color="inherit"
+              onClick={handleExportDatabase}
+              disabled={exportLoading}
+              sx={{ mr: 1 }}
+            >
+              <DownloadIcon />
+            </IconButton>
+          </Tooltip>
         </Toolbar>
       </AppBar>
 
@@ -166,20 +251,54 @@ const Dashboard = () => {
         <Grid container spacing={3}>
           {/* Account Indicators */}
           <Grid item xs={12}>
-            <Typography variant="h5" gutterBottom>
-              Saldo das Contas
-            </Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h5" gutterBottom>
+                Saldo das Contas
+              </Typography>
+              <Box display="flex" alignItems="center" gap={2}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={selectionMode}
+                      onChange={handleToggleSelectionMode}
+                    />
+                  }
+                  label="Modo Seleção"
+                />
+                {selectionMode && (
+                  <Button 
+                    variant="outlined" 
+                    size="small"
+                    onClick={handleSelectAll}
+                  >
+                    {selectedAccountIds.length === accounts.length ? 'Desmarcar Todas' : 'Selecionar Todas'}
+                  </Button>
+                )}
+              </Box>
+            </Box>
             <Grid container spacing={2}>
               {accounts.map((account) => (
-                <Grid item xs={12} sm={6} md={4} key={account.id}>
+                <Grid item xs={12} sm={6} md={3} key={account.id}>
                   <AccountIndicator 
                     account={account} 
                     onAccountUpdate={handleAccountUpdate}
+                    isSelected={selectedAccountIds.includes(account.id)}
+                    onToggleSelection={selectionMode ? handleToggleSelection : null}
                   />
                 </Grid>
               ))}
             </Grid>
           </Grid>
+
+          {/* Account Summary */}
+          {(selectionMode || selectedAccountIds.length > 0) && (
+            <Grid item xs={12}>
+              <AccountSummary 
+                accounts={accounts}
+                selectedAccountIds={selectedAccountIds}
+              />
+            </Grid>
+          )}
 
           {/* Balance Chart */}
           <Grid item xs={12} lg={8}>

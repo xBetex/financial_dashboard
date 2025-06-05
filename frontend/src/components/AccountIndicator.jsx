@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import {
   Card,
   CardContent,
@@ -195,4 +195,4 @@ const AccountIndicator = ({ account, onAccountUpdate, isSelected = false, onTogg
   );
 };
 
-export default AccountIndicator; 
+export default memo(AccountIndicator); 

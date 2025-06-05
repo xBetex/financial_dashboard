@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func, extract
 from typing import List, Optional
 from datetime import datetime, date
 from pydantic import BaseModel
@@ -19,6 +19,13 @@ class TransactionCreate(BaseModel):
     category: str
     amount: float
     account_id: int
+
+class TransactionUpdate(BaseModel):
+    description: Optional[str] = None
+    amount: Optional[float] = None
+    transaction_type: Optional[str] = None
+    category: Optional[str] = None
+    account_id: Optional[int] = None
 
 class TransactionResponse(BaseModel):
     id: int
@@ -44,13 +51,13 @@ async def get_transactions(
     description: Optional[str] = Query(None, description="Filter by description (partial match)"),
     db: Session = Depends(get_db)
 ):
-    """Get transactions with optional filters"""
-    query = db.query(Transaction)
+    """Get transactions with optional filters - optimized with eager loading"""
+    query = db.query(Transaction).options(joinedload(Transaction.account))
     
     if month:
-        query = query.filter(func.extract('month', Transaction.date) == month)
+        query = query.filter(extract('month', Transaction.date) == month)
     if year:
-        query = query.filter(func.extract('year', Transaction.date) == year)
+        query = query.filter(extract('year', Transaction.date) == year)
     if transaction_type:
         query = query.filter(Transaction.transaction_type == transaction_type)
     if category:
@@ -60,7 +67,9 @@ async def get_transactions(
     if description:
         query = query.filter(Transaction.description.ilike(f"%{description}%"))
     
-    transactions = query.order_by(Transaction.date.desc()).offset(skip).limit(limit).all()
+    query = query.order_by(Transaction.date.desc())
+    
+    transactions = query.offset(skip).limit(limit).all()
     return transactions
 
 @router.post("/", response_model=TransactionResponse)

@@ -22,7 +22,7 @@ import {
   Search as SearchIcon,
 } from '@mui/icons-material';
 
-const Filters = ({ filters, onFiltersChange, accounts }) => {
+const Filters = React.memo(({ filters, onFiltersChange, accounts }) => {
   const [searchText, setSearchText] = useState(filters.description || '');
   
   // Sincronizar searchText quando filters.description mudar externamente
@@ -228,8 +228,8 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
                 onChange={handleFilterChange('transactionType')}
               >
                 <MenuItem value="">Todos os tipos</MenuItem>
-                <MenuItem value="income">💚 Receita</MenuItem>
-                <MenuItem value="expense">💸 Despesa</MenuItem>
+                <MenuItem value="entrada">💚 Entrada</MenuItem>
+                <MenuItem value="saida">💸 Saída</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -372,6 +372,6 @@ const Filters = ({ filters, onFiltersChange, accounts }) => {
       </CardContent>
     </Card>
   );
-};
+});
 
 export default Filters; 

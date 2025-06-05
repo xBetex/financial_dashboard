@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import {
   Card,
   CardContent,
@@ -449,4 +449,4 @@ const TransactionList = ({ transactions, accounts, loading, onTransactionUpdate,
   );
 };
 
-export default TransactionList; 
+export default memo(TransactionList); 

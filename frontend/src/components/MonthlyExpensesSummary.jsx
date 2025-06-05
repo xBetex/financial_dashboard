@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -24,20 +24,19 @@ const MonthlyExpensesSummary = ({ selectedAccountIds = [], accounts = [] }) => {
     loading: true
   });
 
-  useEffect(() => {
-    fetchMonthlyData();
-  }, [selectedAccountIds]);
+  // Memoizar os IDs das contas para evitar re-renders desnecessários
+  const accountsToFilter = useMemo(() => {
+    return selectedAccountIds.length > 0 ? selectedAccountIds : accounts.map(acc => acc.id);
+  }, [selectedAccountIds, accounts]);
 
-  const fetchMonthlyData = async () => {
+  // Debounce para evitar muitas chamadas seguidas
+  const fetchMonthlyData = useCallback(async () => {
     setMonthlyData(prev => ({ ...prev, loading: true }));
     
     try {
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth() + 1;
       const currentYear = currentDate.getFullYear();
-      
-      // Se nenhuma conta estiver selecionada, usar todas
-      const accountsToFilter = selectedAccountIds.length > 0 ? selectedAccountIds : accounts.map(acc => acc.id);
       
       const response = await fetch(`http://localhost:8000/transactions/?month=${currentMonth}&year=${currentYear}`);
       
@@ -72,7 +71,16 @@ const MonthlyExpensesSummary = ({ selectedAccountIds = [], accounts = [] }) => {
       console.error('Erro ao buscar dados mensais:', error);
       setMonthlyData(prev => ({ ...prev, loading: false }));
     }
-  };
+  }, [accountsToFilter]);
+
+  useEffect(() => {
+    // Debounce de 300ms para evitar chamadas excessivas
+    const timeoutId = setTimeout(() => {
+      fetchMonthlyData();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [fetchMonthlyData]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('pt-BR', {

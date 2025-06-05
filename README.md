@@ -80,7 +80,27 @@ npm --version      # npm 6+
 
 ## 🚀 Instalação e Execução
 
-### Método Rápido (Recomendado)
+### 💻 Windows (PowerShell) - Recomendado
+```powershell
+# Clone ou baixe o projeto
+cd financial_dashboard
+
+# Executar script principal (com menu interativo)
+.\start-services.ps1
+
+# OU executar script simples (sem menu)
+.\start-simple.ps1
+
+# Para parar os serviços
+.\stop-services.ps1
+```
+
+**Scripts PowerShell disponíveis:**
+- 🚀 `start-services.ps1` - Script completo com verificações, menu interativo e gerenciamento
+- ⚡ `start-simple.ps1` - Script rápido para iniciar os serviços
+- 🛑 `stop-services.ps1` - Script para parar todos os serviços
+
+### 🐧 Linux/Mac (Bash)
 ```bash
 # Clone ou baixe o projeto
 cd financial_dashboard
@@ -92,12 +112,14 @@ chmod +x start.sh
 ./start.sh
 ```
 
-O script `start.sh` irá:
-1. ✅ Verificar todos os pré-requisitos
-2. 📦 Instalar dependências automaticamente (primeira execução)
-3. 🐍 Iniciar o backend Python
-4. ⚛️ Iniciar o frontend React
-5. 🌐 Abrir automaticamente no navegador
+**O que os scripts fazem:**
+1. ✅ Verificar todos os pré-requisitos (Python, Node.js, npm)
+2. ✅ Verificar se as portas 3000 e 8000 estão disponíveis
+3. 📦 Instalar dependências automaticamente (primeira execução)
+4. 🐍 Iniciar o backend Python (FastAPI)
+5. ⚛️ Iniciar o frontend React
+6. 🌐 Abrir automaticamente no navegador
+7. 🎛️ Menu interativo para gerenciar os serviços (Windows)
 
 ### Método Manual
 

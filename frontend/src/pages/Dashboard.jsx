@@ -436,13 +436,36 @@ const Dashboard = () => {
                   />
                 </Grid>
 
-                {/* Filters */}
+                {/* Filters - Sticky Position */}
                 <Grid item xs={12} lg={4}>
-                  <Filters 
-                    filters={filters} 
-                    onFiltersChange={handleFiltersChange}
-                    accounts={accounts}
-                  />
+                  <Box 
+                    sx={{ 
+                      position: 'sticky',
+                      top: 20,
+                      zIndex: 10,
+                      maxHeight: 'calc(100vh - 40px)',
+                      overflowY: 'auto',
+                      '&::-webkit-scrollbar': {
+                        width: '6px',
+                      },
+                      '&::-webkit-scrollbar-track': {
+                        background: 'transparent',
+                      },
+                      '&::-webkit-scrollbar-thumb': {
+                        background: 'rgba(0,0,0,.2)',
+                        borderRadius: '3px',
+                      },
+                      '&::-webkit-scrollbar-thumb:hover': {
+                        background: 'rgba(0,0,0,.4)',
+                      },
+                    }}
+                  >
+                    <Filters 
+                      filters={filters} 
+                      onFiltersChange={handleFiltersChange}
+                      accounts={accounts}
+                    />
+                  </Box>
                 </Grid>
               </Grid>
             </Grid>

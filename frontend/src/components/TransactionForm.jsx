@@ -11,14 +11,11 @@ import {
   Alert,
   InputAdornment,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { ptBR } from 'date-fns/locale';
+import { format } from 'date-fns';
 
 const TransactionForm = ({ accounts, onTransactionCreated, onClose }) => {
   const [formData, setFormData] = useState({
-    date: new Date(),
+    date: format(new Date(), 'yyyy-MM-dd'),
     description: '',
     transaction_type: '',
     category: '',
@@ -52,12 +49,7 @@ const TransactionForm = ({ accounts, onTransactionCreated, onClose }) => {
     setError('');
   };
 
-  const handleDateChange = (newDate) => {
-    setFormData({
-      ...formData,
-      date: newDate,
-    });
-  };
+
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -100,7 +92,7 @@ const TransactionForm = ({ accounts, onTransactionCreated, onClose }) => {
         body: JSON.stringify({
           ...formData,
           amount: parseFloat(formData.amount),
-          date: formData.date.toISOString(),
+          date: formData.date + 'T00:00:00.000Z',
         }),
       });
 
@@ -111,7 +103,7 @@ const TransactionForm = ({ accounts, onTransactionCreated, onClose }) => {
 
       // Reset form and close
       setFormData({
-        date: new Date(),
+        date: format(new Date(), 'yyyy-MM-dd'),
         description: '',
         transaction_type: '',
         category: '',
@@ -128,19 +120,21 @@ const TransactionForm = ({ accounts, onTransactionCreated, onClose }) => {
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
-      <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <DatePicker
-              label="Data"
-              value={formData.date}
-              onChange={handleDateChange}
-              renderInput={(params) => (
-                <TextField {...params} fullWidth required />
-              )}
-            />
-          </Grid>
+    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Data"
+            type="date"
+            value={formData.date}
+            onChange={handleChange('date')}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            required
+          />
+        </Grid>
 
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth required>
@@ -240,8 +234,7 @@ const TransactionForm = ({ accounts, onTransactionCreated, onClose }) => {
           </Grid>
         </Grid>
       </Box>
-    </LocalizationProvider>
-  );
-};
+    );
+  };
 
 export default TransactionForm; 

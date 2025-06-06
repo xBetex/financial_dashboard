@@ -16,7 +16,16 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
-import { LineChart } from '@mui/x-charts/LineChart';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -107,7 +116,7 @@ const BalanceChart = ({ accounts }) => {
   };
 
   const prepareChartData = () => {
-    if (Object.keys(balanceHistory).length === 0) return { xAxis: [], series: [] };
+    if (Object.keys(balanceHistory).length === 0) return [];
 
     // Get all unique dates and sort them
     const allDates = new Set();
@@ -118,39 +127,55 @@ const BalanceChart = ({ accounts }) => {
     });
     
     const sortedDates = Array.from(allDates).sort();
-    const xAxisLabels = sortedDates.map(date => {
+    
+    // Create data points for recharts format
+    return sortedDates.map(date => {
       const dateObj = new Date(date + 'T00:00:00');
+      let dateLabel;
       if (selectedPeriod <= 30) {
-        return dateObj.toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' });
+        dateLabel = dateObj.toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' });
       } else if (selectedPeriod <= 120) {
-        return dateObj.toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' });
+        dateLabel = dateObj.toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' });
       } else {
-        return dateObj.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+        dateLabel = dateObj.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
       }
-    });
 
-    // Create series for each selected account
-    const series = selectedAccounts.map((accountId, index) => {
-      const accountHistory = balanceHistory[accountId] || [];
-      const data = sortedDates.map(date => {
+      const dataPoint = { 
+        date: dateLabel,
+        fullDate: date 
+      };
+
+      // Add balance data for each selected account with intelligent interpolation
+      selectedAccounts.forEach(accountId => {
+        const accountHistory = balanceHistory[accountId] || [];
         const entry = accountHistory.find(item => 
           new Date(item.date).toISOString().split('T')[0] === date
         );
-        return entry ? entry.balance : null;
+        
+        if (entry) {
+          dataPoint[getAccountName(accountId)] = entry.balance;
+        } else {
+          // Find the most recent balance before this date
+          const sortedHistory = accountHistory
+            .filter(item => new Date(item.date).toISOString().split('T')[0] <= date)
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+          
+          if (sortedHistory.length > 0) {
+            // Use the most recent balance (carry forward)
+            dataPoint[getAccountName(accountId)] = sortedHistory[0].balance;
+          } else {
+            // If no previous data, try to find the next available balance
+            const futureHistory = accountHistory
+              .filter(item => new Date(item.date).toISOString().split('T')[0] > date)
+              .sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            dataPoint[getAccountName(accountId)] = futureHistory.length > 0 ? futureHistory[0].balance : 0;
+          }
+        }
       });
 
-      return {
-        data,
-        label: getAccountName(accountId),
-        color: getChartColors(index),
-        connectNulls: true,
-      };
+      return dataPoint;
     });
-
-    return {
-      xAxis: xAxisLabels,
-      series
-    };
   };
 
   const getCurrentPeriodLabel = () => {
@@ -221,7 +246,7 @@ const BalanceChart = ({ accounts }) => {
           <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
             <CircularProgress />
           </Box>
-        ) : Object.keys(balanceHistory).length === 0 || chartData.series.length === 0 ? (
+        ) : Object.keys(balanceHistory).length === 0 || chartData.length === 0 ? (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
             <Typography color="text.secondary">
               Nenhum dado de histórico disponível
@@ -229,19 +254,54 @@ const BalanceChart = ({ accounts }) => {
           </Box>
         ) : (
           <Box height={300}>
-            <LineChart
-              width={undefined}
-              height={300}
-              series={chartData.series}
-              xAxis={[
-                {
-                  scaleType: 'point',
-                  data: chartData.xAxis,
-                },
-              ]}
-              margin={{ left: 70, right: 30, top: 30, bottom: 30 }}
-              grid={{ vertical: true, horizontal: true }}
-            />
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={chartData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="date"
+                  tick={{ fontSize: 12 }}
+                  angle={-45}
+                  textAnchor="end"
+                />
+                <YAxis 
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(value) => 
+                    new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    }).format(value)
+                  }
+                />
+                <Tooltip 
+                  formatter={(value, name) => [
+                    new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    }).format(value),
+                    name
+                  ]}
+                  labelFormatter={(label) => `Data: ${label}`}
+                />
+                <Legend />
+                {selectedAccounts.map((accountId, index) => (
+                  <Line
+                    key={accountId}
+                    type="monotone"
+                    dataKey={getAccountName(accountId)}
+                    stroke={getChartColors(index)}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                    activeDot={{ r: 5 }}
+                    connectNulls={true}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
           </Box>
         )}
 

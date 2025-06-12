@@ -4,13 +4,13 @@ import {
   CardContent,
   Typography,
   Box,
-  Grid,
-  Divider,
+  Grid
 } from '@mui/material';
 import {
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
   AccountBalance as AccountBalanceIcon,
+  AccountBalanceWallet as AccountBalanceWalletIcon,
 } from '@mui/icons-material';
 
 const AccountSummary = ({ accounts, selectedAccountIds }) => {
@@ -23,7 +23,7 @@ const AccountSummary = ({ accounts, selectedAccountIds }) => {
 
   const getSelectedAccounts = () => {
     if (selectedAccountIds.length === 0) {
-      return accounts; // Se nenhuma conta estiver selecionada, mostra todas
+      return accounts;
     }
     return accounts.filter(account => selectedAccountIds.includes(account.id));
   };
@@ -32,30 +32,28 @@ const AccountSummary = ({ accounts, selectedAccountIds }) => {
     const selectedAccounts = getSelectedAccounts();
     
     let totalPositive = 0;
+    let totalNegative = 0;
     let totalBalance = 0;
     let accountCount = selectedAccounts.length;
     
-    const accountBreakdown = selectedAccounts.map(account => {
-      const positive = account.balance > 0 ? account.balance : 0;
-      
-      totalPositive += positive;
+    selectedAccounts.forEach(account => {
+      if (account.balance > 0) {
+        totalPositive += account.balance;
+      } else {
+        totalNegative += Math.abs(account.balance);
+      }
       totalBalance += account.balance;
-      
-      return {
-        ...account,
-        positive,
-      };
     });
     
     return {
       totalPositive,
+      totalNegative,
       totalBalance,
       accountCount,
-      accountBreakdown,
     };
   };
 
-  const { totalPositive, totalBalance, accountCount, accountBreakdown } = calculateTotals();
+  const { totalPositive, totalNegative, totalBalance, accountCount } = calculateTotals();
 
   return (
     <Card>
@@ -64,9 +62,8 @@ const AccountSummary = ({ accounts, selectedAccountIds }) => {
           Resumo das Contas {selectedAccountIds.length > 0 ? 'Selecionadas' : '(Todas)'}
         </Typography>
         
-        {/* Totais Gerais */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} md={4}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6} md={3}>
             <Box sx={{ 
               textAlign: 'center', 
               p: 2, 
@@ -84,7 +81,25 @@ const AccountSummary = ({ accounts, selectedAccountIds }) => {
             </Box>
           </Grid>
           
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{ 
+              textAlign: 'center', 
+              p: 2, 
+              backgroundColor: '#ffebee', 
+              borderRadius: 2,
+              border: '1px solid #f44336'
+            }}>
+              <TrendingDownIcon sx={{ fontSize: 40, color: 'error.dark', mb: 1 }} />
+              <Typography variant="h6" color="error.dark" fontWeight="bold">
+                {formatCurrency(totalNegative)}
+              </Typography>
+              <Typography variant="caption" color="error.dark" fontWeight="500">
+                Total Negativo
+              </Typography>
+            </Box>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
             <Box sx={{ 
               textAlign: 'center', 
               p: 2, 
@@ -102,77 +117,36 @@ const AccountSummary = ({ accounts, selectedAccountIds }) => {
             </Box>
           </Grid>
           
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} sm={6} md={3}>
             <Box sx={{ 
               textAlign: 'center', 
               p: 2, 
-              backgroundColor: totalBalance >= 0 ? '#e8f5e8' : '#fff3e0', 
+              backgroundColor: totalBalance >= 0 ? '#e8f5e8' : '#ffebee', 
               borderRadius: 2,
-              border: totalBalance >= 0 ? '1px solid #4caf50' : '1px solid #ff9800'
+              border: totalBalance >= 0 ? '1px solid #4caf50' : '1px solid #f44336'
             }}>
-              <AccountBalanceIcon sx={{ 
+              <AccountBalanceWalletIcon sx={{ 
                 fontSize: 40, 
-                color: totalBalance >= 0 ? 'success.dark' : 'warning.dark', 
+                color: totalBalance >= 0 ? 'success.dark' : 'error.dark', 
                 mb: 1 
               }} />
-              <Typography variant="h6" color={totalBalance >= 0 ? 'success.dark' : 'warning.dark'} fontWeight="bold">
+              <Typography 
+                variant="h6" 
+                color={totalBalance >= 0 ? 'success.dark' : 'error.dark'} 
+                fontWeight="bold"
+              >
                 {formatCurrency(totalBalance)}
               </Typography>
-              <Typography variant="caption" color={totalBalance >= 0 ? 'success.dark' : 'warning.dark'} fontWeight="500">
+              <Typography 
+                variant="caption" 
+                color={totalBalance >= 0 ? 'success.dark' : 'error.dark'} 
+                fontWeight="500"
+              >
                 Saldo Total
               </Typography>
             </Box>
           </Grid>
         </Grid>
-
-        <Divider sx={{ my: 2 }} />
-
-        {/* Detalhamento por Conta */}
-        <Typography variant="subtitle1" gutterBottom>
-          Detalhamento por Conta:
-        </Typography>
-        
-        {accountBreakdown.map((account) => (
-          <Box key={account.id} sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              {account.name}
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <Box sx={{ 
-                  textAlign: 'center', 
-                  p: 2, 
-                  backgroundColor: '#f5f5f5', 
-                  borderRadius: 2,
-                  border: '1px solid #e0e0e0'
-                }}>
-                  <Typography variant="h6" color="text.primary" fontWeight="bold">
-                    {formatCurrency(account.balance)}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" fontWeight="500">
-                    Saldo Atual
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={6}>
-                <Box sx={{ 
-                  textAlign: 'center', 
-                  p: 2, 
-                  backgroundColor: '#f5f5f5', 
-                  borderRadius: 2,
-                  border: '1px solid #e0e0e0'
-                }}>
-                  <Typography variant="h6" color="text.primary" fontWeight="bold">
-                    {account.balance > 0 ? '✅' : account.balance === 0 ? '⚪' : '🔴'} {account.balance >= 1000 ? 'Excelente' : account.balance > 0 ? 'Positivo' : 'Zerado'}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" fontWeight="500">
-                    Status
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Box>
-        ))}
       </CardContent>
     </Card>
   );

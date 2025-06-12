@@ -15,8 +15,6 @@ import {
   Snackbar,
   Alert,
   Button,
-  FormControlLabel,
-  Switch,
   IconButton,
   Tooltip,
   Tabs,
@@ -68,7 +66,6 @@ const Dashboard = () => {
   const [transactions, setTransactions] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [selectedAccountIds, setSelectedAccountIds] = useState([]);
-  const [selectionMode, setSelectionMode] = useState(false);
   const [openForm, setOpenForm] = useState(false);
   const [filters, setFilters] = useState({
     month: '',
@@ -262,13 +259,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleToggleSelectionMode = () => {
-    setSelectionMode(!selectionMode);
-    if (!selectionMode) {
-      setSelectedAccountIds([]);
-    }
-  };
-
   const showSnackbar = (message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
   };
@@ -362,24 +352,13 @@ const Dashboard = () => {
                   💳 Saldo das Contas
                 </Typography>
                 <Box display="flex" alignItems="center" gap={2}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={selectionMode}
-                        onChange={handleToggleSelectionMode}
-                      />
-                    }
-                    label="Modo Seleção"
-                  />
-                  {selectionMode && (
-                    <Button 
-                      variant="outlined" 
-                      size="small"
-                      onClick={handleSelectAll}
-                    >
-                      {selectedAccountIds.length === accounts.length ? 'Desmarcar Todas' : 'Selecionar Todas'}
-                    </Button>
-                  )}
+                  <Button 
+                    variant="outlined" 
+                    size="small"
+                    onClick={handleSelectAll}
+                  >
+                    {selectedAccountIds.length === accounts.length ? 'Desmarcar Todas' : 'Selecionar Todas'}
+                  </Button>
                 </Box>
               </Box>
               <Grid container spacing={2}>
@@ -389,7 +368,7 @@ const Dashboard = () => {
                       account={account} 
                       onAccountUpdate={handleAccountUpdate}
                       isSelected={selectedAccountIds.includes(account.id)}
-                      onToggleSelection={selectionMode ? handleToggleSelection : null}
+                      onToggleSelection={handleToggleSelection}
                     />
                   </Grid>
                 ))}
@@ -397,14 +376,12 @@ const Dashboard = () => {
             </Grid>
 
             {/* Account Summary */}
-            {(selectionMode || selectedAccountIds.length > 0) && (
-              <Grid item xs={12}>
-                <AccountSummary 
-                  accounts={accounts}
-                  selectedAccountIds={selectedAccountIds}
-                />
-              </Grid>
-            )}
+            <Grid item xs={12}>
+              <AccountSummary 
+                accounts={accounts}
+                selectedAccountIds={selectedAccountIds}
+              />
+            </Grid>
 
             {/* Monthly Expenses Summary */}
             <Grid item xs={12}>

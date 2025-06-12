@@ -3,7 +3,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # SQLite database URL
-SQLALCHEMY_DATABASE_URL = "sqlite:///./financial_dashboard.db"
+import os
+DATABASE_DIR = os.getenv("DATABASE_DIR", "./data")
+os.makedirs(DATABASE_DIR, exist_ok=True)
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{DATABASE_DIR}/financial_dashboard.db"
 
 # Create engine
 engine = create_engine(

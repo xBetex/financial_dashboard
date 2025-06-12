@@ -12,7 +12,6 @@ import {
   Button,
   TextField,
   Checkbox,
-  FormControlLabel,
   Chip,
 } from '@mui/material';
 import {
@@ -28,7 +27,8 @@ const AccountIndicator = ({ account, onAccountUpdate, isSelected = false, onTogg
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleEditClick = () => {
+  const handleEditClick = (e) => {
+    e.stopPropagation();
     setNewName(account.name);
     setEditDialogOpen(true);
   };
@@ -101,43 +101,36 @@ const AccountIndicator = ({ account, onAccountUpdate, isSelected = false, onTogg
 
   return (
     <Card 
+      onClick={() => onToggleSelection(account.id, !isSelected)}
       sx={{ 
         height: '100%',
         transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
         border: isSelected ? '2px solid' : '1px solid',
         borderColor: isSelected ? 'primary.main' : 'divider',
+        cursor: 'pointer',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+          borderColor: 'primary.main',
         }
       }}
     >
       <CardContent>
-        {/* Header with selection checkbox */}
+        {/* Header */}
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
           <Box display="flex" alignItems="center">
-            {onToggleSelection && (
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={isSelected}
-                    onChange={(e) => onToggleSelection(account.id, e.target.checked)}
-                    size="small"
-                  />
-                }
-                label={
-                  <Typography variant="h6" component="div" color="text.secondary">
-                    {account.name}
-                  </Typography>
-                }
-                sx={{ margin: 0 }}
-              />
-            )}
-            {!onToggleSelection && (
-              <Typography variant="h6" component="div" color="text.secondary">
-                {account.name}
-              </Typography>
-            )}
+            <Checkbox
+              checked={isSelected}
+              onChange={(e) => {
+                e.stopPropagation();
+                onToggleSelection(account.id, e.target.checked);
+              }}
+              size="small"
+              sx={{ mr: 1 }}
+            />
+            <Typography variant="h6" component="div" color="text.secondary">
+              {account.name}
+            </Typography>
             <IconButton 
               size="small" 
               onClick={handleEditClick}
@@ -167,7 +160,7 @@ const AccountIndicator = ({ account, onAccountUpdate, isSelected = false, onTogg
       </CardContent>
 
       {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onClose={handleClose}>
+      <Dialog open={editDialogOpen} onClose={handleClose} onClick={(e) => e.stopPropagation()}>
         <DialogTitle>Editar Nome da Conta</DialogTitle>
         <DialogContent>
           <TextField
